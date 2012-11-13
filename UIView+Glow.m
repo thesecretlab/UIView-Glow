@@ -24,8 +24,11 @@ static char* GLOWVIEW_KEY = "GLOWVIEW";
     objc_setAssociatedObject(self, GLOWVIEW_KEY, glowView, OBJC_ASSOCIATION_RETAIN);
 }
 
-// Create a pulsing, glowing view based on this one.
-- (void) startGlowing {
+- (void)startGlowingWithColor:(UIColor *)color intensity:(CGFloat)intensity {
+    [self startGlowingWithColor:color fromIntensity:0.1 toIntensity:intensity repeat:YES];
+}
+
+- (void) startGlowingWithColor:(UIColor*)color fromIntensity:(CGFloat)fromIntensity toIntensity:(CGFloat)toIntensity repeat:(BOOL)repeat {
     
     // If we're already glowing, don't bother
     if ([self glowView])
@@ -38,6 +41,14 @@ static char* GLOWVIEW_KEY = "GLOWVIEW";
     
     UIGraphicsBeginImageContext(self.bounds.size); {
         [self.layer renderInContext:UIGraphicsGetCurrentContext()];
+        
+        UIBezierPath* path = [UIBezierPath bezierPathWithRect:CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height)];
+        
+        [color setFill];
+        
+        [path fillWithBlendMode:kCGBlendModeSourceAtop alpha:1.0];
+        
+        
         image = UIGraphicsGetImageFromCurrentImageContext();
     } UIGraphicsEndImageContext();
     
@@ -51,16 +62,16 @@ static char* GLOWVIEW_KEY = "GLOWVIEW";
     // Core Animation. By setting the shadow to white and the shadow radius to 
     // something large, we get a pleasing glow.
     glowView.alpha = 0;
-    glowView.layer.shadowColor = [UIColor whiteColor].CGColor;
+    glowView.layer.shadowColor = color.CGColor;
     glowView.layer.shadowOffset = CGSizeZero;
     glowView.layer.shadowRadius = 10;
-    glowView.layer.shadowOpacity = 0.9;
+    glowView.layer.shadowOpacity = 1.0;
     
     // Create an animation that slowly fades the glow view in and out forever.
     CABasicAnimation* animation = [CABasicAnimation animationWithKeyPath:@"opacity"];
-    animation.fromValue = [NSNumber numberWithFloat:0.1];
-    animation.toValue = [NSNumber numberWithFloat:0.6];
-    animation.repeatCount = HUGE_VAL;
+    animation.fromValue = @(fromIntensity);
+    animation.toValue = @(toIntensity);
+    animation.repeatCount = repeat ? HUGE_VAL : 0;
     animation.duration = 1.0;
     animation.autoreverses = YES;
     animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
@@ -68,7 +79,36 @@ static char* GLOWVIEW_KEY = "GLOWVIEW";
     [glowView.layer addAnimation:animation forKey:@"pulse"];
     
     // Finally, keep a reference to this around so it can be removed later
-    [self setGlowView:glowView];     
+    [self setGlowView:glowView];
+}
+
+- (void) glowOnceAtLocation:(CGPoint)point inView:(UIView*)view {
+    [self startGlowingWithColor:[UIColor whiteColor] fromIntensity:0 toIntensity:0.6 repeat:NO];
+    
+    [self glowView].center = point;
+    [view addSubview:[self glowView]];
+    
+    int64_t delayInSeconds = 2.0;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        [self stopGlowing];
+    });
+}
+
+- (void)glowOnce {
+    [self startGlowing];
+    
+    int64_t delayInSeconds = 2.0;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        [self stopGlowing];
+    });
+    
+}
+
+// Create a pulsing, glowing view based on this one.
+- (void) startGlowing {
+    [self startGlowingWithColor:[UIColor whiteColor] intensity:0.6];
 }
 
 // Stop glowing by removing the glowing view from the superview 
