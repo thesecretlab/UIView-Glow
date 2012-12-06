@@ -39,7 +39,7 @@ static char* GLOWVIEW_KEY = "GLOWVIEW";
     // the glow won't update.
     UIImage* image;
     
-    UIGraphicsBeginImageContext(self.bounds.size); {
+    UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, [UIScreen mainScreen].scale); {
         [self.layer renderInContext:UIGraphicsGetCurrentContext()];
         
         UIBezierPath* path = [UIBezierPath bezierPathWithRect:CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height)];
