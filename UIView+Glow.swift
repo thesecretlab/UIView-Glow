@@ -45,7 +45,7 @@ extension UIView {
             path.fill(with: .sourceAtop, alpha:1.0)
             
             
-            if let i = UIGraphicsGetImageFromCurrentImageContext() { image = i}
+            image = UIGraphicsGetImageFromCurrentImageContext()!
         }
         
         UIGraphicsEndImageContext()
