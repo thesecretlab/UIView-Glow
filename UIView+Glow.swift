@@ -21,7 +21,7 @@ extension UIView {
     }
     
     func startGlowingWithColor(color:UIColor, intensity:CGFloat) {
-        self.startGlowingWithColor(color, fromIntensity: 0.1, toIntensity: intensity, repeat: true)
+        self.startGlowingWithColor(color: color, fromIntensity: 0.1, toIntensity: intensity, repeat: true)
     }
     
     func startGlowingWithColor(color:UIColor, fromIntensity:CGFloat, toIntensity:CGFloat, repeat shouldRepeat:Bool) {
@@ -35,17 +35,17 @@ extension UIView {
         // the glow won't update.
         var image:UIImage
         
-        UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.mainScreen().scale); do {
-            self.layer.renderInContext(UIGraphicsGetCurrentContext()!)
+        UIGraphicsBeginImageContextWithOptions(self.bounds.size, false, UIScreen.main.scale); do {
+            self.layer.render(in: UIGraphicsGetCurrentContext()!)
             
-            let path = UIBezierPath(rect: CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height));
+            let path = UIBezierPath(rect: CGRect(x: 0, y: 0, width: self.bounds.size.width, height: self.bounds.size.height))
             
-            color.setFill();
+            color.setFill()
             
-            path.fillWithBlendMode(.SourceAtop, alpha:1.0);
+            path.fill(with: .sourceAtop, alpha:1.0)
             
             
-            image = UIGraphicsGetImageFromCurrentImageContext();
+            image = UIGraphicsGetImageFromCurrentImageContext()!
         }
         
         UIGraphicsEndImageContext()
@@ -60,8 +60,8 @@ extension UIView {
         // Core Animation. By setting the shadow to white and the shadow radius to
         // something large, we get a pleasing glow.
         glowView.alpha = 0
-        glowView.layer.shadowColor = color.CGColor
-        glowView.layer.shadowOffset = CGSizeZero
+        glowView.layer.shadowColor = color.cgColor
+        glowView.layer.shadowOffset = CGSize.zero
         glowView.layer.shadowRadius = 10
         glowView.layer.shadowOpacity = 1.0
         
@@ -74,31 +74,29 @@ extension UIView {
         animation.autoreverses = true
         animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
         
-        glowView.layer.addAnimation(animation, forKey: "pulse")
+        glowView.layer.add(animation, forKey: "pulse")
         
         // Finally, keep a reference to this around so it can be removed later
         self.glowView = glowView
     }
     
     func glowOnceAtLocation(point: CGPoint, inView view:UIView) {
-        self.startGlowingWithColor(UIColor.whiteColor(), fromIntensity: 0, toIntensity: 0.6, repeat: false)
+        self.startGlowingWithColor(color: UIColor.white, fromIntensity: 0, toIntensity: 0.6, repeat: false)
         
         self.glowView!.center = point
         view.addSubview(self.glowView!)
         
-        let delayInSeconds:Int64 = 2
-        let popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * Int64(NSEC_PER_SEC))
-        dispatch_after(popTime, dispatch_get_main_queue()) { [weak self] in
-            self?.stopGlowing()
+        let delay: Double = 2 * Double(Int64(NSEC_PER_SEC))
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + delay) {
+            self.stopGlowing()
         }
     }
     
     func glowOnce() {
         self.startGlowing()
         
-        let delayInSeconds:Int64 = 2;
-        let popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * Int64(NSEC_PER_SEC))
-        dispatch_after(popTime, dispatch_get_main_queue()){
+        let delay: Double = 2 * Double(Int64(NSEC_PER_SEC))
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + delay) {
             self.stopGlowing()
         }
         
@@ -106,7 +104,7 @@ extension UIView {
     
     // Create a pulsing, glowing view based on this one.
     func startGlowing() {
-        self.startGlowingWithColor(UIColor.whiteColor(), intensity:0.6);
+        self.startGlowingWithColor(color: UIColor.white, intensity:0.6);
     }
     
     // Stop glowing by removing the glowing view from the superview
